@@ -9,6 +9,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
@@ -18,10 +19,13 @@ app.add_middleware(
 # TODO: conectarse al cluster Admonsis  
 # client = MongoClient("mongodb://<usuario>:<contraseña>@157.253.236.88:8087")
 
-client = MongoClient("")
+
+MONGO_URI = os.environ.get("MONGO_URI")
+
+client = MongoClient(MONGO_URI)
 # TODO: conectarse a la base de datos Admonsis  
 # db = client["ISIS*******"]
-db = client[""]
+db = client["ISIS2304D28202610"]
 
 
 @app.get("/")
@@ -30,19 +34,30 @@ def inicio():
 
 @app.get('/bares/{bar_id}/comentarios')
 def get_comentarios(bar_id: int):
-    comentarios = None  # TODO: completar
+    comentarios = list(comentarios_collection.find(
+        {"bar_id": bar_id},
+        {"_id": 0}
+    ))
     return comentarios
 
 @app.post('/bares/{bar_id}/comentarios')
 def post_comentario(bar_id: int, datos: dict):
     datos['bar_id'] = bar_id
     datos['fecha']  = datetime.now().isoformat()
-    # TODO: completar
+    comentarios_collection.insert_one(datos)
     return {'mensaje': 'Comentario guardado'}
 
-# TODO: implementar GET /bares/{bar_id}/eventos
-# Debe retornar todos los eventos del bar desde la colección 'eventos'
+@app.get("/api/bares/{bar_id}/eventos")
+def obtener_eventos(bar_id: int):
+    eventos = list(eventos_collection.find(
+        {"bar_id": bar_id},
+        {"_id": 0}
+    ))
+    return eventos
 
-# TODO: implementar POST /bares/{bar_id}/eventos  
-# Debe insertar el evento en la colección 'eventos'
-# Recuerde agregar bar_id y fecha_creacion al documento antes de insertar
+@app.post("/api/bares/{bar_id}/eventos")
+def crear_evento(bar_id: int, datos: dict):
+    datos["bar_id"] = bar_id
+    datos["fecha_creacion"] = datetime.now().isoformat()
+    eventos_collection.insert_one(datos)
+    return {"mensaje": "Evento creado correctamente"}
