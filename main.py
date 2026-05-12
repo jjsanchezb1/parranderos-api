@@ -26,7 +26,8 @@ client = MongoClient(MONGO_URI)
 # TODO: conectarse a la base de datos Admonsis  
 # db = client["ISIS*******"]
 db = client["ISIS2304D28202610"]
-
+comentarios_collection = db["comentarios"]
+eventos_collection = db["eventos"]
 
 @app.get("/")
 def inicio():
